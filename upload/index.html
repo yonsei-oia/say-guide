@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>봉사활동 과제 제출 — 연세대학교 국제처</title>
+<style>
+  body {
+    margin: 0; padding: 32px 20px; color: #1b1b1b; background: #fff;
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+  }
+  main { max-width: 480px; margin: 0 auto; }
+  h1 { font-size: 1.15rem; }
+  button, a.btn {
+    display: block; width: 100%; min-height: 48px; margin-top: 12px;
+    border: 1px solid #003976; border-radius: 8px; background: #003976; color: #fff;
+    font-size: 1rem; text-align: center; text-decoration: none; line-height: 46px;
+  }
+  button.ghost { background: #fff; color: #003976; }
+  code { word-break: break-all; font-size: .85rem; color: #5f6368; }
+</style>
+</head>
+<body>
+<main>
+  <div id="wait">
+    <p>이동 중입니다...</p>
+  </div>
+
+  <noscript>
+    <style>#wait { display: none; }</style>
+    <h1>브라우저 설정을 확인해 주십시오</h1>
+    <p>이 페이지는 자바스크립트가 켜져 있어야 제출 페이지로 이동할 수 있습니다.
+       Chrome 또는 Safari에서 다시 열어 주시고, 그래도 이동하지 않으면
+       국제처로 문의해 주십시오.</p>
+  </noscript>
+
+  <div id="blocked" hidden>
+    <h1>브라우저에서 열어 주십시오</h1>
+    <p>지금 보고 계신 창은 앱 안에 들어 있는 브라우저입니다.
+       이 창에서는 구글 로그인이 차단되어 과제 제출 페이지를 열 수 없습니다.</p>
+    <p><strong>Chrome 또는 Safari에서 아래 주소를 열어 주십시오.</strong></p>
+    <p>아래 버튼으로 주소를 복사한 뒤, Chrome 또는 Safari를 열고 주소창에
+       붙여넣어 이동해 주십시오.</p>
+    <p><code id="addr"></code></p>
+    <button type="button" id="copyBtn">주소 복사</button>
+    <a class="btn ghost" id="openBtn" href="#" target="_blank" rel="noopener">그래도 열어 보기</a>
+  </div>
+
+  <div id="noconf" hidden>
+    <h1>준비 중입니다</h1>
+    <p>과제 제출 페이지 주소가 아직 설정되지 않았습니다. 국제처로 문의해 주십시오.</p>
+  </div>
+</main>
+<script src="../config.js"></script>
+<script src="../lib.js"></script>
+<script>
+(function () {
+  var url = (typeof CONFIG !== 'undefined' && CONFIG.UPLOAD_EXEC_URL) || '';
+  // 학생 입력은 아니지만 사람이 손으로 붙여넣는 값이다. http:나 잘못된 스킴이
+  // 들어오면 location.replace가 그대로 따라가므로, lib.js의 가드를 여기서도 쓴다.
+  // 통과 못 하면 아래 "준비 중입니다" 화면으로 떨어진다 — 설정이 깨진 것이 맞다.
+  if (url && !isSafeLink(url)) url = '';
+  var here = location.href;
+
+  if (!url) {
+    document.getElementById('wait').hidden = true;
+    document.getElementById('noconf').hidden = false;
+    return;
+  }
+
+  if (isRawWebView(navigator.userAgent)) {
+    document.getElementById('wait').hidden = true;
+    document.getElementById('blocked').hidden = false;
+    document.getElementById('addr').textContent = here;
+    document.getElementById('openBtn').href = url;
+    document.getElementById('copyBtn').onclick = function () {
+      var btn = this;
+      var done = function () { btn.textContent = '복사되었습니다'; };
+      // 복사가 실패해도 학생은 다음 행동을 알 수 있어야 한다. 아무 반응이 없으면
+      // 버튼이 눌린 것인지조차 알 수 없다.
+      var fail = function () { btn.textContent = '복사되지 않았습니다. 위 주소를 길게 눌러 복사해 주십시오'; };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(here).then(done, fail);
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = here; document.body.appendChild(ta); ta.select();
+        var ok = false;
+        try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+        document.body.removeChild(ta);
+        if (ok) { done(); } else { fail(); }
+      }
+    };
+    return;
+  }
+
+  location.replace(url);
+}());
+</script>
+</body>
+</html>
