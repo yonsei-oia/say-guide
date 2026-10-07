@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#ffffff">
+<meta name="description" content="Places around Sinchon recommended by exchange students at Yonsei University.">
+<title>Yonsei SAY Life Guide</title>
+<style>
+  /* 서체는 저장소에 내장한 GmarketSans 라틴 부분집합 하나뿐이다(외부 리소스 0).
+     OIA 공식 사이트가 GmarketSans를 쓰므로 그 톤에 맞춘다. 라이선스가 수정본에
+     원래 이름을 금지해 'SAY Guide Latin'으로 개명했다 — fonts/LICENSE.txt.
+     unicode-range를 라틴으로 묶어 두었으므로 한글(장소의 한글 병기)은 내려받지 않고
+     시스템 글꼴로 넘어간다. 한글까지 넣으면 굵기당 2MB대라 폰에서 무겁다.
+     위계는 굵기와 크기 도약으로 만들고, 크기는 네 단계(12.8 / 16 / 20 / h1)로 끊는다.
+     단계를 잘게 나누면 어느 것도 위계로 읽히지 않는다. */
+  @font-face {
+    font-family: "SAY Guide Latin";
+    src: url("fonts/SAYGuideLatin-Medium.woff") format("woff");
+    font-weight: 400 600;
+    font-display: swap;
+    unicode-range: U+0020-007E, U+00A0-00FF, U+00B7, U+2013-2014, U+2018-201D, U+2022, U+2026, U+20A9;
+  }
+  @font-face {
+    font-family: "SAY Guide Latin";
+    src: url("fonts/SAYGuideLatin-Bold.woff") format("woff");
+    font-weight: 700 900;
+    font-display: swap;
+    unicode-range: U+0020-007E, U+00A0-00FF, U+00B7, U+2013-2014, U+2018-201D, U+2022, U+2026, U+20A9;
+  }
+  :root {
+    --paper: #ffffff;
+    --ink: #16181d;
+    --muted: #5a6070;
+    --line: #e4e0d6;
+    /* 컨트롤의 테두리 전용. --line(#e4e0d6)은 흰 배경에서 1.32:1이라 WCAG 1.4.11이
+       컨트롤 경계에 요구하는 3:1에 못 미친다 — 칩이 눌리기 전에는 테두리가 곧
+       "여기가 버튼이다"라는 유일한 신호다. #979186은 같은 따뜻한 회색 계열이면서
+       흰 배경 대비 3.13:1이다. 면·구분선에는 계속 --line을 쓴다(경계가 아니라 결). */
+    --line-strong: #979186;
+    --mat: #fffdf9;          /* 지도 카드 안쪽 — SVG의 종이색(#F4F1EA)과 이어지는 톤 */
+    --accent: #e8590c;       /* 채도 높은 코랄 — 화면에서 강조는 여기 하나 */
+    /* 같은 코랄이라도 글자에는 못 쓴다. #e8590c는 흰 배경에서 3.57:1이라
+       본문 기준(4.5:1) 아래다. 면적·테두리는 --accent, 글자는 --accent-deep. */
+    --accent-deep: #a83c08;
+    --accent-soft: #ffeee2;
+    --navy: #003976;         /* 연세 정체성은 로고·푸터·핀 폴백에만 */
+    --tap: 44px;
+    --pad: 18px;              /* 본문 좌우 여백(칩·안내·푸터 등 고정폭 요소). 지도의
+                                자체 매트는 --map-pad로 따로 둔다 — 핀·클러스터 뱃지의
+                                돌출은 뷰포트에 비례해 커지는데, 본문 여백까지 그 비율을
+                                따라갈 필요는 없다. */
+    /* 지도 매트: 핀(PIN_R=44단위)과 클러스터 뱃지(최대 66.51단위, app.js 참고)가
+       잘리지 않을 폭. 퍼센트 패딩은 자기 자신이 아니라 부모(main) 폭을 기준으로
+       계산되므로 재귀 없이 풀린다 — 모바일 기준 P ≥ 6.651%/(1+2×6.651%) ≈ 5.87%면
+       이론상 충분하고, 6.5%는 그 위에 버퍼를 둔 값이다. 320~1440px 전 구간에서
+       잘림 0을 확인했고, 가장 빠듯한 320px의 여유는 배지 중심에서 원형(반경
+       66.51단위) 기준으로 재면 2.28px, 매트가 실제로 막는 축방향(좌우·상하,
+       54.5단위) 기준으로 재면 5.62px다. 고정 px였다면 ~445px 뷰포트부터
+       핀이 잘리기 시작했다(I-2). */
+    --map-pad: 6.5%;
+    --radius: 18px;
+    /* 12.8 / 16 / 20은 정확히 1.25배 단수(--fs-s → 본문 16px → --fs-l). h1은 이
+       사슬 밖이다 — clamp이 아니라 2rem(32px)/2.5rem(40px) 두 단만 640px에서
+       갈린다(h1 규칙 참고, 아래). */
+    --fs-s: .8rem;           /* 12.8px */
+    --fs-l: 1.25rem;         /* 20px */
+    --sans: "SAY Guide Latin", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", system-ui, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font: 16px/1.55 var(--sans);
+    overflow-wrap: anywhere;
+  }
+  /* 브라우저가 기본값으로 그리는 부분도 이 화면의 일부다. */
+  ::selection { background: var(--accent-soft); color: var(--accent-deep); }
+  button, a, .pin, summary { -webkit-tap-highlight-color: rgba(232, 89, 12, .18); touch-action: manipulation; }
+
+  /* 밝고 채도 있는 톤을 배경 한 겹으로 만든다. 상하를 가로지르는 컬러 바가 아니라
+     위쪽에서 흰 종이로 사라지는 워시다. 이미지가 아니라 그라디언트라 외부 리소스 0. */
+  /* absolute다 — fixed로 두면 스크롤해도 워시가 화면에 붙어 따라다닌다.
+     이건 머리 부분의 배경이지 화면의 배경이 아니다. */
+  .wash {
+    position: absolute; top: 0; left: 0; right: 0; height: 340px;
+    z-index: -1; pointer-events: none;
+    background:
+      radial-gradient(58% 120% at 10% 0%, rgba(232, 89, 12, .17), transparent 62%),
+      radial-gradient(52% 110% at 92% 4%, rgba(12, 166, 120, .17), transparent 60%);
+  }
+  main { max-width: 720px; margin: 0 auto; padding: 0 0 56px; }
+  /* viewport-fit=cover를 켰으므로 노치·홈 인디케이터를 직접 피해야 한다. */
+  .pad {
+    padding-left: max(var(--pad), env(safe-area-inset-left));
+    padding-right: max(var(--pad), env(safe-area-inset-right));
+  }
+
+  /* ─── 머리 ─────────────────────────────────────────── */
+  .head {
+    display: flex; align-items: flex-start; gap: 16px;
+    padding-top: 22px; padding-bottom: 4px;
+  }
+  .head-text { flex: 1 1 auto; min-width: 0; }
+  /* 두 단으로 끊는다. clamp+vw가 더 매끄럽지만 값이 어디에서도 정적으로
+     읽히지 않아, 몇 년 뒤 이 파일을 여는 사람에게 크기가 보이지 않는다. */
+  h1 {
+    margin: 0; font-weight: 800; font-size: 2rem;
+    letter-spacing: -.03em; line-height: 1.03; text-wrap: balance;
+  }
+  @media (min-width: 640px) { h1 { font-size: 2.5rem; } }
+  .sub { margin: 10px 0 0; color: var(--muted); max-width: 34ch; }
+  .logo { flex: 0 0 auto; width: 92px; height: auto; margin-top: 4px; }
+  @media (min-width: 640px) { .logo { width: 116px; } }
+
+  .count {
+    display: inline-block; margin: 14px 0 0; padding: 6px 13px;
+    border-radius: 999px; background: var(--accent-soft); color: var(--accent-deep);
+    font-size: var(--fs-s); font-weight: 700; font-variant-numeric: tabular-nums;
+  }
+  .count:empty { display: none; }
+
+  /* ─── 상태 화면 세 종류 ─────────────────────────────── */
+  .state { padding: 40px var(--pad); text-align: center; color: var(--muted); }
+  .state h2 {
+    margin: 0 0 10px; font-size: var(--fs-l); font-weight: 800;
+    color: var(--ink); letter-spacing: -.02em; text-wrap: balance;
+  }
+  .state p { margin: 0 auto 4px; max-width: 44ch; }
+  .state-error { color: var(--ink); }
+  .state button {
+    min-height: var(--tap); margin-top: 18px; padding: 0 22px;
+    border: 2px solid var(--ink); border-radius: 999px;
+    background: var(--ink); color: #fff; font: inherit; font-weight: 700; cursor: pointer;
+    transition: background-color .12s ease, border-color .12s ease;
+  }
+  .state button:hover { background: var(--accent-deep); border-color: var(--accent-deep); }
+  .spinner {
+    display: block; width: 26px; height: 26px; margin: 0 auto 14px;
+    border: 3px solid var(--line); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin .9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* 왼쪽에 굵은 컬러 띠를 두르지 않는다 — 어느 화면에나 붙어 있는 기성품 무늬다.
+     대신 면 전체를 옅은 강조색으로 깔아 본문과 구분한다. */
+  .notice {
+    margin: 14px var(--pad) 0; padding: 13px 15px;
+    border: 2px solid var(--accent); border-radius: 14px;
+    background: var(--accent-soft); color: var(--accent-deep); font-weight: 600;
+  }
+
+  /* ─── 필터 칩 ──────────────────────────────────────── */
+  #filters { margin: 18px 0 0; }
+  #filters .row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+  #filters .row:last-child { margin-bottom: 0; }
+  /* 좌우 여백은 #filters의 직속 자식(.row = 분류 행)에만 준다 — 태그 행은
+     #filters 직속이 아니라 <details>(아래 .tag-disclose) 안에 있고, 그 details가
+     이미 같은 여백을 padding으로 갖고 있다. 예전에는 이 규칙이 `#filters .row`
+     (후손 선택자)라 태그 행에도 겹쳐 붙어 분류 칩은 18px, 태그 칩은 36px로
+     어긋났다(N-6). */
+  #filters > .row {
+    padding-left: max(var(--pad), env(safe-area-inset-left));
+    padding-right: max(var(--pad), env(safe-area-inset-right));
+  }
+  .chip {
+    display: inline-flex; align-items: center; gap: 9px;
+    min-height: var(--tap); padding: 0 16px;
+    border: 2px solid var(--line-strong); border-radius: 999px;
+    background: #fff; color: var(--ink); font: inherit; font-weight: 700;
+    letter-spacing: -.01em; cursor: pointer;
+    transition: transform .12s ease, border-color .12s ease;
+  }
+  .chip:hover { border-color: var(--ink); }
+  .chip:active { transform: scale(.96); }
+  .chip .dot { width: 12px; height: 12px; border-radius: 50%; flex: 0 0 auto; background: var(--navy); }
+  .chip[aria-pressed="true"] { border-color: transparent; }
+  .chip.tag[aria-pressed="true"] { background: var(--ink); color: #fff; }
+  /* 좌우 margin을 안 준다 — .note는 항상 .tag-disclose(<details>) 안에서만 쓰이고
+     그 부모가 이미 --pad만큼 padding을 갖고 있다(N-6, 위 #filters > .row와 같은
+     이유). 여기서 또 --pad를 더하면 36px로 어긋난다. */
+  .note {
+    margin: 6px 0 0; color: var(--muted); font-size: var(--fs-s); line-height: 1.45;
+    max-width: 52ch;
+  }
+
+  /* 태그 그룹을 접어 두는 <details>(I-5). 첫 화면의 높이를 지도가 아니라 필터가
+     먹는 것을 막는다 — 분류 칩 한 줄은 그대로 두고, 자라나는 태그 그룹만 뒤로
+     접는다. 열림/닫힘 표시는 native <details>가 스크린리더에 알려 주므로
+     별도 aria-expanded를 손으로 관리하지 않는다. */
+  #filters > details.tag-disclose {
+    margin: 0 0 8px;
+    padding-left: max(var(--pad), env(safe-area-inset-left));
+    padding-right: max(var(--pad), env(safe-area-inset-right));
+  }
+  #filters > details.tag-disclose:last-child { margin-bottom: 0; }
+  /* 칩과 같은 테두리를 쓴다 — 이 <details>는 블록이라 칩과 같은 줄에 설 수는
+     없지만, 같은 좌측 기준선에 8px 간격으로 세로로 이어지는 같은 모양·같은
+     높이의 알약이다. 한쪽만 진하게 두면 둘이 다른 것처럼 보인다. */
+  .tag-disclose > summary {
+    display: inline-flex; align-items: center; gap: 8px;
+    min-height: var(--tap); padding: 0 16px;
+    border: 2px solid var(--line-strong); border-radius: 999px;
+    background: #fff; color: var(--ink); font: inherit; font-weight: 700;
+    letter-spacing: -.01em; cursor: pointer; list-style: none;
+  }
+  .tag-disclose > summary::-webkit-details-marker { display: none; }
+  .tag-disclose > summary::marker { content: ''; }
+  .tag-disclose > summary:hover { border-color: var(--ink); }
+  .tag-disclose .chev { transition: transform .12s ease; }
+  .tag-disclose[open] > summary .chev { transform: rotate(180deg); }
+  .tag-disclose > [role="group"] { margin-top: 10px; }
+
+  /* ─── 지도 ─────────────────────────────────────────── */
+  /* 지도가 주인공이다. 모바일(<640px)에서는 본문 열의 좌우 여백을 지도에 주지 않고
+     --map-pad만큼의 매트만 남겨 화면 폭을 최대한 지도에 쓴다 — 그 매트가 곧
+     가장자리 핀·클러스터 뱃지가 잘리지 않도록 그림이 넘어올 자리다(I-1·I-2,
+     --pad와 값이 다른 이유는 위 :root의 --map-pad 주석 참고). ≥640px에서는 아래
+     미디어쿼리가 본문과 같은 --pad(18px) 마진을 다시 주고 카드로 전환한다 — 그
+     구간에서는 지도도 본문과 같은 좌우 여백을 갖는다(N-7). */
+  #mapWrap {
+    position: relative; margin: 18px 0 0;
+    /* 좌우만 safe-area와 비교하는 이유: #mapWrap이 모바일에서 화면 좌우 끝까지
+       닿기 때문이다(margin 없음) — 위아래는 헤더·목록에 막혀 화면 끝에 닿지
+       않는다. 노치·홈 인디케이터로 인한 세로(top/bottom) inset이 0이 아닌 경우가
+       흔하지만, 그건 화면 세로 끝에 닿는 요소에서나 의미가 있다. */
+    padding: var(--map-pad) max(var(--map-pad), env(safe-area-inset-right))
+             var(--map-pad) max(var(--map-pad), env(safe-area-inset-left));
+    background: var(--mat); border-top: 2px solid var(--line); border-bottom: 2px solid var(--line);
+    overflow: hidden;                       /* 매트 밖으로는 넘기지 않는다 */
+  }
+  @media (min-width: 640px) {
+    #mapWrap {
+      margin: 22px var(--pad) 0; border: 2px solid var(--line); border-radius: var(--radius);
+      box-shadow: 0 16px 38px rgba(90, 70, 40, .12);
+    }
+  }
+  #mapWrap svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .map-note {
+    position: absolute; top: calc(var(--pad) + 12px);
+    left: max(var(--pad), env(safe-area-inset-left));
+    right: max(var(--pad), env(safe-area-inset-right));
+    z-index: 1; margin: 0; padding: 13px 15px;
+    border-radius: 14px; background: rgba(255, 255, 255, .95);
+    box-shadow: 0 6px 22px rgba(90, 70, 40, .18);
+    color: var(--ink); font-size: var(--fs-s); text-align: center; text-wrap: balance;
+  }
+
+  /* 핀. 그려지는 원은 장식이고, 포인터를 받는 것은 투명한 탭 원 하나뿐이다
+     (app.js 참고). 그래야 이웃 핀이 서로의 탭을 훔치지 않는다. */
+  .pin { cursor: pointer; }
+  .pin-art { pointer-events: none; }
+  .pin-hit { fill: transparent; }
+  .pin-ring { transition: stroke-width .12s ease, stroke .12s ease; }
+  .pin:hover .pin-ring { stroke-width: 9; }
+  .pin:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+  .pin:focus-visible .pin-ring { stroke: var(--ink); stroke-width: 9; }
+  @keyframes pinIn { from { opacity: 0; transform: scale(.55); } to { opacity: 1; transform: scale(1); } }
+  .pin {
+    animation: pinIn .34s cubic-bezier(.2, .9, .3, 1.25) both;
+    transform-box: fill-box; transform-origin: center;
+  }
+  .pin:active .pin-art { opacity: .82; }
+
+  /* ─── 지도에 없는 것들 ─────────────────────────────── */
+  #offmapWrap { margin-top: 32px; }
+  #offmapWrap h2 {
+    margin: 0 var(--pad) 12px; font-size: var(--fs-s); font-weight: 800;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+  }
+  #offmapList {
+    list-style: none; margin: 0;
+    padding-left: max(var(--pad), env(safe-area-inset-left));
+    padding-right: max(var(--pad), env(safe-area-inset-right));
+  }
+  /* 목록이 길어져도 화면 밖은 레이아웃하지 않는다. */
+  #offmapList li { margin-bottom: 8px; content-visibility: auto; contain-intrinsic-size: auto 76px; }
+  .place-row {
+    display: flex; align-items: center; gap: 13px; width: 100%;
+    min-height: 68px; padding: 10px 15px 10px 10px; text-align: left;
+    border: 2px solid var(--line); border-radius: 16px; background: #fff;
+    color: var(--ink); font: inherit; cursor: pointer;
+    transition: border-color .12s ease, transform .12s ease;
+  }
+  .place-row:hover { border-color: var(--ink); }
+  .place-row:active { transform: scale(.985); }
+  .place-row .thumb {
+    flex: 0 0 auto; width: 48px; height: 48px; border-radius: 13px;
+    object-fit: cover; background: var(--line);
+  }
+  .place-row .swatch {
+    flex: 0 0 auto; width: 48px; height: 48px; border-radius: 13px; background: var(--navy);
+  }
+  .place-row .rt { min-width: 0; }
+  .place-row .t { display: block; font-weight: 700; letter-spacing: -.015em; }
+  .place-row .c { display: block; color: var(--muted); font-size: var(--fs-s); margin-top: 3px; }
+
+  /* ─── 하단 시트 ────────────────────────────────────── */
+  #sheet {
+    border: 0; padding: 0; margin: auto auto 0;
+    width: 100%; max-width: 100%; max-height: 88vh;
+    background: #fff; color: var(--ink);
+    border-radius: 22px 22px 0 0; overflow: hidden;
+    box-shadow: 0 -10px 44px rgba(22, 24, 29, .26);
+  }
+  @supports (max-height: 88dvh) { #sheet { max-height: 88dvh; } }
+  #sheet::backdrop { background: rgba(22, 24, 29, .48); }
+  @keyframes sheetUp { from { transform: translateY(14%); opacity: .4; } to { transform: none; opacity: 1; } }
+  /* 열렸을 때만 flex다 — [open] 없이 #sheet에 display를 주면 닫힌 <dialog>를
+     감추는 브라우저 기본 스타일(display:none)을 덮어써서 시트가 늘 보인다.
+     세로 flex인 이유는 아래 .sheet-body 주석 참고. */
+  #sheet[open] {
+    display: flex; flex-direction: column;
+    animation: sheetUp .26s cubic-bezier(.2, .8, .3, 1) both;
+  }
+  @media (min-width: 640px) {
+    #sheet { margin: auto; max-width: 560px; border-radius: var(--radius); max-height: 84vh; }
+    @supports (max-height: 84dvh) { #sheet { max-height: 84dvh; } }
+  }
+  /* 손잡이와 머리는 줄어들지 않는다(flex 기본값은 0 1 auto라 눌린다).
+     줄어들 몫은 전부 .sheet-body가 갖는다. */
+  .sheet-grab {
+    flex: 0 0 auto;
+    width: 44px; height: 5px; border-radius: 999px; background: var(--line);
+    margin: 10px auto 0;
+  }
+  @media (min-width: 640px) { .sheet-grab { display: none; } }
+  .sheet-head {
+    flex: 0 0 auto;
+    display: flex; align-items: flex-start; gap: 12px;
+    /* 가로 방향 노치를 피한다 — 시트는 모바일에서 화면 좌우 끝까지 닿으므로,
+       가로로 눕힌 노치 폰에서는 닫기 버튼과 본문 글자가 컷아웃 아래로 들어간다. */
+    padding: 12px max(14px, env(safe-area-inset-right)) 14px max(20px, env(safe-area-inset-left));
+    border-bottom: 2px solid var(--line);
+  }
+  .sheet-head h2 {
+    flex: 1 1 auto; min-width: 0; margin: 0; font-size: var(--fs-l); font-weight: 800;
+    letter-spacing: -.025em; line-height: 1.18; text-wrap: balance;
+  }
+  /* 제목은 시트를 열 때 프로그램으로 포커스한다 — 탭해서 온 것이 아니므로
+     테를 그리지 않는다. 키보드로 온 경우(:focus-visible)에는 그대로 남긴다. */
+  .sheet-head h2:focus:not(:focus-visible) { outline: none; }
+  .sheet-close {
+    flex: 0 0 auto; width: var(--tap); height: var(--tap); padding: 0;
+    border: 2px solid var(--line); border-radius: 50%; background: #fff;
+    color: var(--ink); cursor: pointer; display: inline-flex;
+    align-items: center; justify-content: center;
+    transition: background-color .12s ease, border-color .12s ease, color .12s ease;
+  }
+  .sheet-close:hover { background: var(--ink); border-color: var(--ink); color: #fff; }
+  /* 남은 높이를 전부 갖고 그 안에서만 스크롤한다. 예전에는 머리 높이를 86px로
+     박아 max-height를 계산했는데, 제목이 세 줄만 넘어가도 머리가 그보다 커져
+     본문 꼬리가 #sheet의 overflow:hidden 뒤로 넘어가 영영 닿을 수 없었다
+     (spec 4.1이 이중언어 제목을 요구하므로 세 줄은 흔한 경우다).
+     min-height:0은 방어용이다. flex 아이템의 자동 최소 크기는 콘텐츠 높이지만
+     overflow가 visible이 아니면 0으로 계산되므로, overflow-y:auto가 붙어 있는
+     지금은 이 줄을 빼도 결과가 같다(실측으로 확인했다 — 빼도 잘림 0).
+     나중에 overflow를 손대는 사람이 같은 잘림을 되살리지 않도록 남겨 둔다. */
+  .sheet-body {
+    flex: 1 1 auto; min-height: 0;
+    overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+    padding: 4px max(20px, env(safe-area-inset-right))
+             calc(28px + env(safe-area-inset-bottom))
+             max(20px, env(safe-area-inset-left));
+    scrollbar-color: var(--line) transparent;
+  }
+  .sheet-cat {
+    display: inline-block; margin: 14px 0 0; padding: 5px 12px; border-radius: 999px;
+    background: var(--accent-soft); color: var(--accent-deep); font-size: var(--fs-s);
+    font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  }
+  .taglist { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; padding: 0; margin: 14px 0 0; }
+  .taglist li {
+    padding: 6px 12px; border: 2px solid var(--line); border-radius: 999px;
+    font-size: var(--fs-s); font-weight: 700; color: var(--muted);
+  }
+  .place-block + .place-block { margin-top: 28px; padding-top: 24px; border-top: 2px solid var(--line); }
+  .place-block h3 { margin: 18px 0 0; font-size: 1rem; font-weight: 800; letter-spacing: -.02em; }
+  .note-card { margin-top: 18px; }
+  .note-card img, .note-card iframe {
+    display: block; width: 100%; border: 0; border-radius: 16px; background: var(--line);
+  }
+  /* 드라이브 썸네일은 비율을 알 수 없다. 상자를 고정해 이미지가 도착할 때
+     아래 내용이 밀려 내려가지 않게 한다. */
+  .note-card img { aspect-ratio: 4 / 3; height: auto; object-fit: cover; }
+  .note-card p { margin: 12px 0 0; }
+  /* `.note-card p`보다 선택자를 길게 잡는다 — 짧게 두면 아래 규칙에 여백을 빼앗긴다. */
+  .note-card .note-sem {
+    display: inline-block; margin: 0 0 10px; padding: 4px 11px; border-radius: 999px;
+    background: var(--ink); color: #fff; font-size: var(--fs-s); font-weight: 800;
+    letter-spacing: .08em; font-variant-numeric: tabular-nums;
+  }
+  .note-card .credit { color: var(--muted); font-size: var(--fs-s); }
+  .note-card a {
+    display: inline-flex; align-items: center; min-height: var(--tap); margin-top: 10px;
+    margin-right: 8px; padding: 0 16px; border: 2px solid var(--ink); border-radius: 999px;
+    color: var(--ink); font-weight: 700; text-decoration: none;
+    transition: background-color .12s ease, color .12s ease;
+  }
+  .note-card a:hover { background: var(--ink); color: #fff; }
+
+  footer {
+    margin: 48px var(--pad) 0; padding-top: 20px; border-top: 2px solid var(--line);
+    text-align: center; color: var(--muted); font-size: var(--fs-s);
+  }
+
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .001ms !important; animation-iteration-count: 1 !important;
+      transition-duration: .001ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wash" aria-hidden="true"></div>
+<main>
+  <header class="head pad">
+    <div class="head-text">
+      <h1>The SAY guide to Sinchon</h1>
+      <p class="sub">Where to eat, sit, print, bank and breathe &mdash; mapped by exchange
+         students who got lost here first.</p>
+      <p class="count" id="count" aria-live="polite"></p>
+    </div>
+    <img class="logo" src="yonsei-logo-en.png" alt="Yonsei University" width="1906" height="584">
+  </header>
+
+  <div id="loading" class="state" role="status">
+    <span class="spinner" aria-hidden="true"></span>
+    Loading the guide&hellip;
+  </div>
+
+  <!-- 스크립팅이 꺼져 있으면 지도는 영원히 그려지지 않는다. 그대로 두면 방문자는
+       "Loading..."에 갇힌 채 이유를 알 수 없다. upload/index.html과 같은 방식으로
+       로딩 문구를 감추고 사실대로 알린다. -->
+  <noscript>
+    <style>#loading { display: none; }</style>
+    <div class="state state-error">
+      <h2>This guide needs JavaScript</h2>
+      <p>The map is drawn in your browser, so JavaScript has to be on.</p>
+      <p>Please turn it on in your browser settings and reload this page.</p>
+    </div>
+  </noscript>
+
+  <!-- app.js 자체가 도착하지 않거나 파싱에 실패한 경우. 아래 인라인 가드가 켠다.
+       이 경우도 "Loading..."이 영원히 남는 실패였다. -->
+  <div id="fallback" class="state state-error" hidden>
+    <h2>The guide did not start</h2>
+    <p>Part of this page did not load. Please check your connection and try again.</p>
+    <button type="button" id="fallbackRetry">Try again</button>
+  </div>
+
+  <div id="error" class="state state-error" hidden></div>
+
+  <div id="app" hidden>
+    <p id="notice" class="notice" hidden></p>
+    <div id="filters" role="group" aria-label="Filters"></div>
+    <div id="mapWrap">
+      <p id="mapNote" class="map-note" hidden></p>
+      <!-- 구역 SVG. viewBox 1000x1000은 좌표 계약이다.
+           같은 SVG가 ../penalty-app/Map.html에 있고 둘은 함께 고쳐야 한다.
+           role은 img가 아니라 group이다 — img로 두면 안에 넣는 핀(role=button,
+           tabindex=0)이 보조기술에서 통째로 사라진다. -->
+      <svg id="zone-sinchon" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="Map of the Sinchon area">
+        <rect x="0" y="0" width="1000" height="1000" fill="#F4F1EA"/>
+        <!-- 연세대 캠퍼스 -->
+        <path d="M180 90 L620 90 L620 430 L180 430 Z" fill="#DCE8DA" stroke="#B6CDB2" stroke-width="3"/>
+        <text x="400" y="250" text-anchor="middle" font-size="30" fill="#5A6B57">Yonsei Campus</text>
+        <!-- 정문 -->
+        <circle cx="400" cy="430" r="12" fill="#2F5D3A"/>
+        <text x="400" y="470" text-anchor="middle" font-size="22" fill="#2F5D3A">Main Gate</text>
+        <!-- 연세로 -->
+        <path d="M385 430 L385 830" stroke="#C9C2B4" stroke-width="34" stroke-linecap="round"/>
+        <text x="345" y="640" font-size="20" fill="#7A7263" transform="rotate(-90 345 640)">Yonsei-ro</text>
+        <!-- 신촌역 -->
+        <rect x="300" y="840" width="170" height="60" rx="10" fill="#CBD6E8" stroke="#9FB3D1" stroke-width="3"/>
+        <text x="385" y="878" text-anchor="middle" font-size="22" fill="#3B4E6E">Sinchon Stn.</text>
+        <!-- 상권 블록 -->
+        <rect x="470" y="470" width="330" height="330" rx="12" fill="#EFE3D7" stroke="#D8C5B2" stroke-width="3"/>
+        <text x="635" y="640" text-anchor="middle" font-size="24" fill="#8A7460">Sinchon</text>
+        <rect x="120" y="470" width="220" height="330" rx="12" fill="#EFE3D7" stroke="#D8C5B2" stroke-width="3"/>
+        <text x="230" y="640" text-anchor="middle" font-size="22" fill="#8A7460">Changcheon</text>
+        <!-- 이대 방향 -->
+        <path d="M800 640 L960 640" stroke="#C9C2B4" stroke-width="24" stroke-linecap="round"/>
+        <text x="880" y="612" text-anchor="middle" font-size="20" fill="#7A7263">to Ewha</text>
+      </svg>
+    </div>
+    <div id="empty" class="state" hidden></div>
+    <section id="offmapWrap" hidden>
+      <h2>Not on the map</h2>
+      <ul id="offmapList"></ul>
+    </section>
+  </div>
+
+  <footer>&copy; 2026 Yonsei University, Office of International Affairs</footer>
+</main>
+
+<dialog id="sheet" aria-labelledby="sheetTitle"></dialog>
+
+<script src="config.js"></script>
+<script src="lib.js"></script>
+<script src="app.js"></script>
+<script>
+// app.js가 도착하지 못했거나 파싱에서 죽으면 boot이 존재하지 않는다. 그러면
+// DOMContentLoaded 리스너도 걸리지 않아 화면이 "Loading..."에서 영원히 멈춘다.
+// 이 세 줄이 그 침묵을 깬다. (외부 리소스가 아니라 인라인 가드다.)
+(function () {
+  if (typeof boot === 'function') return;
+  var l = document.getElementById('loading');
+  var f = document.getElementById('fallback');
+  var r = document.getElementById('fallbackRetry');
+  if (l) l.hidden = true;
+  if (f) f.hidden = false;
+  if (r) r.onclick = function () { location.reload(); };
+}());
+</script>
+</body>
+</html>
